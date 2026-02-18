@@ -1,0 +1,1435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Open When... 💌</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Quicksand:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --cream: #FDF8F3;
+            --blush: #F5E6E0;
+            --rose: #E8C4C4;
+            --dusty-rose: #CE9A9A;
+            --deep-rose: #B76E79;
+            --burgundy: #722F37;
+            --gold: #C9A227;
+            --gold-light: #E8D5A3;
+            --shadow: rgba(114, 47, 55, 0.15);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Quicksand', sans-serif;
+            background: var(--cream);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* ============================================
+           SPLASH SCREEN
+           ============================================ */
+        .splash-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, var(--cream) 0%, var(--blush) 100%);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .splash-screen.fade-out {
+            animation: fadeOut 0.6s ease forwards;
+        }
+
+        @keyframes fadeOut {
+            to { opacity: 0; visibility: hidden; }
+        }
+
+        .letter-envelope {
+            width: 300px;
+            height: 200px;
+            position: relative;
+            cursor: pointer;
+        }
+
+        .letter-envelope:hover { transform: scale(1.02); }
+        .letter-envelope { transition: transform 0.3s; }
+
+        .env-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(145deg, #fff, var(--blush));
+            border-radius: 8px;
+            box-shadow: 0 15px 50px rgba(114,47,55,0.2);
+            border: 2px solid var(--rose);
+        }
+
+        .env-flap {
+            position: absolute;
+            top: 0;
+            width: 100%;
+            height: 100px;
+            background: linear-gradient(180deg, var(--rose), var(--blush));
+            clip-path: polygon(0 0, 50% 100%, 100% 0);
+            transform-origin: top;
+            transition: transform 0.5s ease;
+            z-index: 3;
+        }
+
+        .letter-envelope:hover .env-flap { transform: rotateX(-20deg); }
+        .letter-envelope.open .env-flap { transform: rotateX(-180deg); }
+
+        .env-letter {
+            position: absolute;
+            top: 25px;
+            left: 15px;
+            right: 15px;
+            height: 160px;
+            background: white;
+            border-radius: 4px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 2;
+            transition: transform 0.6s ease 0.1s;
+        }
+
+        .letter-envelope.open .env-letter { transform: translateY(-100px); }
+
+        .env-letter h2 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.6rem;
+            color: var(--burgundy);
+            margin: 0;
+        }
+
+        .env-letter p {
+            font-family: 'Cormorant Garamond', serif;
+            font-style: italic;
+            color: var(--dusty-rose);
+            margin: 0.25rem 0 0;
+        }
+
+        .env-seal {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 45px;
+            height: 45px;
+            background: radial-gradient(circle at 30% 30%, var(--deep-rose), var(--burgundy));
+            border-radius: 50%;
+            z-index: 4;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.3s;
+        }
+
+        .env-seal::before { content: '♥'; color: var(--gold-light); font-size: 1.2rem; }
+        .letter-envelope.open .env-seal { opacity: 0; }
+
+        .splash-hint {
+            color: var(--dusty-rose);
+            font-size: 0.95rem;
+            animation: pulse 2s infinite;
+        }
+
+        .sound-reminder {
+            color: var(--dusty-rose);
+            font-size: 0.8rem;
+            opacity: 0.7;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* ============================================
+           MAIN CONTENT
+           ============================================ */
+        .main-content {
+            opacity: 0;
+            transition: opacity 0.8s ease 0.5s;
+        }
+
+        .main-content.visible {
+            opacity: 1;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(ellipse at 20% 20%, rgba(232, 196, 196, 0.4) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 80%, rgba(245, 230, 224, 0.6) 0%, transparent 50%),
+                radial-gradient(ellipse at 60% 30%, rgba(201, 162, 39, 0.1) 0%, transparent 40%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+/* Floating hearts background */
+        .floating-hearts {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
+        }
+
+        .floating-heart {
+            position: absolute;
+            font-size: 1.2rem;
+            opacity: 0.15;
+            color: var(--deep-rose);
+            animation: floatUp linear infinite;
+        }
+
+        @keyframes floatUp {
+            0% {
+                transform: translateY(100vh) rotate(0deg) scale(1);
+                opacity: 0;
+            }
+            10% {
+                opacity: 0.15;
+            }
+            90% {
+                opacity: 0.15;
+            }
+            100% {
+                transform: translateY(-20vh) rotate(360deg) scale(0.8);
+                opacity: 0;
+            }
+        }
+
+        /* ============================================
+           INTERACTIVE PHYSICS ROSE PETALS
+           ============================================ */
+        .petals-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+        }
+
+        /* Petal message popup */
+        .petal-message {
+            position: fixed;
+            background: white;
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(114, 47, 55, 0.25);
+            border: 2px solid var(--rose);
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.1rem;
+            font-style: italic;
+            color: var(--burgundy);
+            z-index: 1000;
+            max-width: 280px;
+            text-align: center;
+            animation: popIn 0.3s ease-out;
+            pointer-events: none;
+        }
+
+        .petal-message::after {
+            content: '🌹';
+            display: block;
+            margin-top: 0.5rem;
+            font-size: 1.2rem;
+        }
+
+        @keyframes popIn {
+            from { opacity: 0; transform: scale(0.8) translateY(10px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+
+        /* ============================================
+           MUSIC PLAYER
+           ============================================ */
+        .music-player {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            background: white;
+            padding: 0.75rem 1rem;
+            border-radius: 50px;
+            box-shadow: 0 10px 40px rgba(114, 47, 55, 0.2);
+            border: 2px solid var(--rose);
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.5s ease, transform 0.5s ease;
+        }
+
+        .music-player.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .album-art {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid var(--blush);
+            animation: spin 8s linear infinite paused;
+        }
+
+        .album-art.playing {
+            animation-play-state: running;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .player-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .song-title {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--burgundy);
+            max-width: 120px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .song-artist {
+            font-size: 0.75rem;
+            color: var(--dusty-rose);
+        }
+
+        .play-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: none;
+            background: linear-gradient(135deg, var(--deep-rose) 0%, var(--burgundy) 100%);
+            color: white;
+            font-size: 1rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 4px 15px rgba(183, 110, 121, 0.4);
+        }
+
+        .play-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(183, 110, 121, 0.5);
+        }
+
+        .track-select {
+            display: flex;
+            gap: 0.4rem;
+            margin-left: 0.5rem;
+        }
+
+        .track-btn {
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            border: 2px solid var(--rose);
+            background: white;
+            font-size: 0.65rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: var(--burgundy);
+        }
+
+        .track-btn:hover, .track-btn.active {
+            background: var(--rose);
+            color: white;
+        }
+
+        /* ============================================
+           CONTAINER & HEADER
+           ============================================ */
+        .container {
+            position: relative;
+            z-index: 1;
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 2rem;
+            padding-bottom: 120px;
+            pointer-events: none;
+        }
+
+        .container * {
+            pointer-events: auto;
+        }
+
+        header {
+            text-align: center;
+            padding: 3rem 1rem 4rem;
+            position: relative;
+        }
+
+        header::after {
+            content: '✦';
+            position: absolute;
+            bottom: 1rem;
+            left: 50%;
+            transform: translateX(-50%);
+            color: var(--gold);
+            font-size: 1.5rem;
+        }
+
+        h1 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: clamp(2.5rem, 8vw, 4.5rem);
+            font-weight: 400;
+            color: var(--burgundy);
+            letter-spacing: 0.05em;
+            margin-bottom: 0.5rem;
+        }
+
+        h1 span {
+            font-style: italic;
+            color: var(--deep-rose);
+        }
+
+        .subtitle {
+            font-size: 1.1rem;
+            color: var(--dusty-rose);
+            font-weight: 500;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+        }
+
+        .intro-message {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.3rem;
+            font-style: italic;
+            color: var(--burgundy);
+            max-width: 600px;
+            margin: 2rem auto 0;
+            line-height: 1.8;
+        }
+
+
+.envelope-card.placeholder {
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+
+
+        /* ============================================
+           ENVELOPE GRID & CARDS
+           ============================================ */
+        .envelope-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2rem;
+            padding: 2rem 0;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        @media (max-width: 900px) {
+            .envelope-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 600px) {
+            .envelope-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .envelope-grid .envelope-card:last-of-type {
+            grid-column: 2;
+        }
+
+        @media (max-width: 900px) {
+            .envelope-grid .envelope-card:last-of-type {
+                grid-column: auto;
+            }
+        }
+
+        .envelope-card {
+            perspective: 1000px;
+            height: 220px;
+            cursor: pointer;
+        }
+
+        .envelope-card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+            transform-style: preserve-3d;
+        }
+
+        .envelope-card:hover .envelope-card-inner {
+            transform: rotateX(-5deg) translateY(-8px);
+        }
+
+        .envelope-card.opening .envelope-card-inner {
+            animation: unfoldEnvelope 0.8s ease-out forwards;
+        }
+
+        @keyframes unfoldEnvelope {
+            0% { transform: rotateX(0) scale(1); }
+            30% { transform: rotateX(-20deg) scale(1.02); }
+            60% { transform: rotateX(-10deg) scale(1.05) translateY(-20px); }
+            100% { transform: rotateX(0) scale(1.08) translateY(-10px); opacity: 0.9; }
+        }
+
+        .envelope-card-body {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(145deg, #fff 0%, var(--blush) 100%);
+            border-radius: 16px;
+            box-shadow: 
+                0 10px 40px var(--shadow),
+                0 2px 10px rgba(0,0,0,0.05),
+                inset 0 1px 0 rgba(255,255,255,0.8);
+            border: 1px solid rgba(232, 196, 196, 0.5);
+            overflow: hidden;
+        }
+
+        .envelope-card-flap {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 50%;
+            background: linear-gradient(180deg, var(--rose) 0%, var(--blush) 100%);
+            clip-path: polygon(0 0, 50% 80%, 100% 0);
+            transform-origin: top center;
+            transition: transform 0.6s ease-out;
+            z-index: 2;
+        }
+
+        .envelope-card:hover .envelope-card-flap {
+            transform: rotateX(-30deg);
+        }
+
+        .envelope-card.opening .envelope-card-flap {
+            animation: openFlap 0.6s ease-out forwards;
+        }
+
+        @keyframes openFlap {
+            0% { transform: rotateX(0); }
+            100% { transform: rotateX(-180deg); }
+        }
+
+        .envelope-card-content {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 2rem;
+            text-align: center;
+            z-index: 1;
+        }
+
+        .envelope-card-icon {
+            font-size: 2.5rem;
+            margin-bottom: 0.75rem;
+            display: block;
+            transition: transform 0.3s;
+        }
+
+        .envelope-card:hover .envelope-card-icon {
+            transform: scale(1.1);
+        }
+
+        .envelope-card-label {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: var(--burgundy);
+            line-height: 1.4;
+        }
+
+        .envelope-card-hint {
+            font-size: 0.8rem;
+            color: var(--dusty-rose);
+            margin-top: 0.75rem;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .envelope-card:hover .envelope-card-hint {
+            opacity: 1;
+        }
+
+        .wax-seal {
+            position: absolute;
+            top: 45%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 45px;
+            height: 45px;
+            background: radial-gradient(circle at 30% 30%, var(--deep-rose) 0%, var(--burgundy) 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 15px rgba(114, 47, 55, 0.4);
+            z-index: 3;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .wax-seal::before {
+            content: '♥';
+            color: var(--gold-light);
+            font-size: 1.1rem;
+        }
+
+        .envelope-card:hover .wax-seal {
+            transform: translate(-50%, -50%) scale(1.1) rotate(10deg);
+            box-shadow: 0 6px 20px rgba(114, 47, 55, 0.5);
+        }
+
+        /* ============================================
+           MODAL
+           ============================================ */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(114, 47, 55, 0.4);
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: linear-gradient(180deg, #fff 0%, var(--cream) 100%);
+            border-radius: 20px;
+            max-width: 550px;
+            width: 100%;
+            max-height: 85vh;
+            overflow-y: auto;
+            padding: 2.5rem;
+            box-shadow: 0 25px 80px rgba(114, 47, 55, 0.35);
+            border: 2px solid var(--rose);
+            animation: modalIn 0.5s ease-out;
+        }
+
+        @keyframes modalIn {
+            from { opacity: 0; transform: scale(0.9) translateY(30px) rotateX(-10deg); }
+            to { opacity: 1; transform: scale(1) translateY(0) rotateX(0); }
+        }
+
+        .modal-header {
+            text-align: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid var(--blush);
+        }
+
+        .modal-icon {
+            font-size: 3rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .modal-title {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.8rem;
+            color: var(--burgundy);
+            font-weight: 600;
+        }
+
+        .modal-gifs {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-gif {
+            width: 100%;
+            border-radius: 12px;
+            border: 3px solid var(--blush);
+        }
+
+        .modal-message {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.2rem;
+            line-height: 1.9;
+            color: var(--burgundy);
+            text-align: left;
+            white-space: pre-line;
+        }
+
+        .signature {
+            text-align: right;
+            margin-top: 1.5rem;
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.1rem;
+            font-style: italic;
+            color: var(--dusty-rose);
+        }
+
+        .modal-close {
+            display: block;
+            margin: 2rem auto 0;
+            padding: 0.75rem 2.5rem;
+            background: linear-gradient(135deg, var(--deep-rose) 0%, var(--burgundy) 100%);
+            color: white;
+            border: none;
+            border-radius: 30px;
+            font-family: 'Quicksand', sans-serif;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(183, 110, 121, 0.4);
+        }
+
+        .modal-close:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(183, 110, 121, 0.5);
+        }
+
+        /* ============================================
+           FOOTER
+           ============================================ */
+        footer {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: var(--dusty-rose);
+            font-size: 0.9rem;
+        }
+
+        .footer-heart {
+            color: var(--deep-rose);
+            animation: heartbeat 1.5s infinite;
+        }
+
+        @keyframes heartbeat {
+            0%, 100% { transform: scale(1); }
+            15% { transform: scale(1.15); }
+            30% { transform: scale(1); }
+            45% { transform: scale(1.1); }
+        }
+
+        /* ============================================
+           RESPONSIVE
+           ============================================ */
+        @media (max-width: 600px) {
+            .container {
+                padding: 1rem;
+                padding-bottom: 140px;
+            }
+            
+            .envelope-grid {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+            
+            .modal-content {
+                padding: 1.5rem;
+            }
+
+            .music-player {
+                bottom: 1rem;
+                right: 1rem;
+                left: 1rem;
+                justify-content: center;
+            }
+
+            .song-title {
+                max-width: 80px;
+            }
+
+            .letter-container {
+                width: 300px;
+                height: 380px;
+            }
+
+            .letter {
+                height: 280px;
+            }
+
+            .letter-title {
+                font-size: 1.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Splash Screen -->
+    <div class="splash-screen" id="splashScreen">
+        <div class="letter-envelope" id="letterEnvelope">
+            <div class="env-back"></div>
+            <div class="env-letter">
+                <h2>For Kenzy</h2>
+                <p>with love</p>
+            </div>
+            <div class="env-flap"></div>
+            <div class="env-seal"></div>
+        </div>
+        <p class="splash-hint">Click to open</p>
+        <p class="sound-reminder">🔊 sound on</p>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content" id="mainContent">
+<!-- Floating Hearts Background -->
+        <div class="floating-hearts" id="floatingHearts"></div>
+        <!-- Physics Petals Canvas -->
+        <canvas class="petals-canvas" id="petalsCanvas"></canvas>
+
+        <!-- Music Player -->
+        <div class="music-player" id="musicPlayer">
+            <img class="album-art" id="albumArt" src="https://nappgvkeodboaazejile.supabase.co/storage/v1/object/public/open-when/smiths-cover.JPG" alt="Album Art">
+            <div class="player-controls">
+                <div class="song-title" id="songTitle">The Smiths</div>
+                <div class="song-artist" id="songArtist">Select a song</div>
+            </div>
+            <button class="play-btn" id="playBtn" onclick="togglePlay()">⏸</button>
+            <div class="track-select">
+                <button class="track-btn active" id="track1Btn" onclick="selectTrack(0)" title="There Is a Light">1</button>
+                <button class="track-btn" id="track2Btn" onclick="selectTrack(1)" title="Puppy Love">2</button>
+                <button class="track-btn" id="track3Btn" onclick="selectTrack(2)" title="Frankly Mr Shankly">3</button>
+            </div>
+        </div>
+
+        <audio id="audioPlayer"></audio>
+
+        <div class="container">
+            <header>
+                <h1>Open <span>When...</span></h1>
+                <p class="subtitle">Letters For You</p>
+                <p class="intro-message">
+                    Kenzy, I wrote these for the moments when you need them. 
+                    Each one is here waiting for you whenever that moment comes.
+                </p>
+            </header>
+
+            <div class="envelope-grid" id="envelopeGrid"></div>
+
+            <footer>
+                <p>Made with <span class="footer-heart">♥</span> for you</p>
+            </footer>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal" id="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span class="modal-icon" id="modalIcon"></span>
+                <h3 class="modal-title" id="modalTitle"></h3>
+            </div>
+            <div class="modal-gifs" id="modalGifs"></div>
+            <p class="modal-message" id="modalMessage"></p>
+            <p class="signature">- Daniel</p>
+            <button class="modal-close" onclick="closeModal()">Close</button>
+        </div>
+    </div>
+
+    <script>
+        // ============================================
+        // CONFIGURATION
+        // ============================================
+        
+        const SUPABASE_URL = 'https://nappgvkeodboaazejile.supabase.co';
+        const SUPABASE_BUCKET = 'open-when';
+
+        const tracks = [
+            {
+                title: "There Is a Light That Never Goes Out",
+                artist: "The Smiths",
+                audioUrl: "https://nappgvkeodboaazejile.supabase.co/storage/v1/object/public/open-when/The%20Smiths%20-%20There%20Is%20A%20Light%20That%20Never%20Goes%20Out%20(Official%20Audio).mp3",
+                coverUrl: "https://nappgvkeodboaazejile.supabase.co/storage/v1/object/public/open-when/smiths-cover.JPG"
+            },
+            {
+                title: "Puppy Love",
+                artist: "Paul Anka",
+                audioUrl: "https://nappgvkeodboaazejile.supabase.co/storage/v1/object/public/open-when/puppy-love.mp3",
+                coverUrl: "https://nappgvkeodboaazejile.supabase.co/storage/v1/object/public/open-when/puppy-love-cover.JPG"
+            },
+            {
+                title: "Frankly, Mr. Shankly",
+                artist: "The Smiths",
+                audioUrl: "https://nappgvkeodboaazejile.supabase.co/storage/v1/object/public/open-when/Frankly,%20Mr.%20Shankly%20(2017%20Master).mp3",
+                coverUrl: "https://nappgvkeodboaazejile.supabase.co/storage/v1/object/public/open-when/smiths-cover.JPG"
+            }
+        ];
+
+        const petalMessages = [
+            "I love you",
+            "You're my favorite person",
+            "Thinking of you",
+            "You make me happy",
+            "Forever yours",
+            "My heart is yours",
+            "You're beautiful",
+            "I miss you",
+            "You're amazing",
+            "Always & forever",
+            "You're my home",
+            "Lucky to have you",
+            "You're everything",
+            "My best friend",
+            "I choose you",
+            "You're incredible",
+            "Dream come true",
+            "My sunshine"
+        ];
+
+        const letters = [
+            {
+                id: 1,
+                icon: '😢',
+                label: "Open When You're Sad",
+                gifs: ['https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExamR3aXJ4bWN0eGxqODYzaTRxYWpiZHhwYjN4M29vaGxkaDAxZ2E1diZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/gl8ymnpv4Sqha/giphy.gif'],
+                message: `Hey. I know something's weighing on you right now. I don't know what it is (maybe you do, maybe you don't) but I know I am here for you and you should know that too.
+
+I wish there could be a button for me to press in order to make all your problems disappear, but regardless of what it is I am always there for you. If things get really bad, just try to remind yourself of the life you've got bound for you: Patent Lawyer with a Porsche and hair of a goddess. 
+
+I love you Kenny. Not the version of you that's okay. Just you. Especially right now.`
+            },
+            {
+                id: 2,
+                icon: '😊',
+                label: "Open When You're Happy",
+                gifs: [
+                    'https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExbTVuMmwxYml4cTlpOXBrNDk4YWIxbXhrZmtiODQ2N2h2Yms4MGk5YiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/11sBLVxNs7v6WA/giphy.gif',
+                    'https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExajRpNXZwZHhsd2x4YTljZG94NGZjMncyeWQ5ODA2YjRqNnBsOGZudiZlcD12MV9naWZzX3NlYXJjaCZjdD1n/okfvUCpgArv3y/giphy.gif'
+                ],
+                message: `You're happy right now. I can picture it right now: your beautiful smile, your eyes gleaming. You know I never understood standing in the frigid snow and cold for the Rockefeller Lighting, but I would stand in the harshest of weather to witness the light from your smile. 
+
+I don't know what's making you feel this way, but I'm glad it exists. You deserve this. You deserve every good feeling, every moment of lightness, every time the world feels right.
+
+Remember this feeling. Store it somewhere. Not because it won't come back (because it will), but because you earned it. Whatever you did, however you got here, you made this happen.
+
+I love seeing you happy. Even from far away. Even just imagining it.`
+            },
+            {
+                id: 3,
+                icon: '💪',
+                label: 'Open When You Need Motivation',
+                gifs: ['https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExdXZib24wZmJraHV1bjE1eXNjeWZhYnR2aDdrMDl1azJ5NG1oc2NrcyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/h16vx4brvu7bWvQE1a/giphy.gif'],
+                message: `Kenzy. Listen to me.
+
+You're going to be an engineer. You're going to be a patent lawyer. You're going to walk into rooms and know exactly what you're talking about because you put in the work. You're putting in the work right now, even when it's hard, even when you're tired.
+
+I've watched you push through things that would've stopped most people. You don't quit. That's not who you are. You keep going. You figure it out. You always have.
+
+Whatever's in front of you right now (the exam, the project, the thing that feels impossible), it's not bigger than you. Nothing is bigger than you.
+
+Now go handle it. I already know you will.`
+            },
+            {
+                id: 4,
+                icon: '😤',
+                label: "Open When You're Angry",
+                gifs: ['https://media3.giphy.com/media/v1.Y2lkPTc5MGI3NjExajhhbG90a3p5eWZwZXYxMWx0Mmd4aDg4ajN1dGpvdHNrZWY5YXQzYyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/lnBuZsAZ1wN3i/giphy.gif'],
+                message: `You're angry. Good. That means something mattered enough to make you feel this way.
+
+I'm not going to tell you to calm down or take deep breaths or whatever. You're allowed to be angry. Feel it. Let it exist.
+
+But when you're ready (not now, but eventually) try to figure out what's underneath it. Usually anger is protecting something softer. Something that got hurt.
+
+And whatever happened, whoever did it, you don't have to carry it forever. You get to decide how long it stays.
+
+I'm here if you want to vent. I'm here if you want to say nothing. I'm just here.`
+            },
+            {
+                id: 5,
+                icon: '🌙',
+                label: "Open When You Can't Sleep",
+                gifs: ['https://media4.giphy.com/media/v1.Y2lkPTc5MGI3NjExejg3M3J0YTV4c2RhaDMwbHV4cDZkeWViZnN1eDc0NHczb3IwbHloZSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/XvDLulUiG6YeWltIQS/giphy.gif'],
+                message: `It's late. Your brain won't shut off. I know the feeling.
+
+Maybe you're thinking about tomorrow. Maybe you're replaying something from today. Maybe it's nothing specific.
+
+Close your eyes for a second. Think about the golf cart. The Smiths playing. That warm air. Neither of us talking because we didn't need to. That feeling of everything being exactly right.
+
+I don't know if that helps. But I hope it does. I hope thinking about us makes the noise a little quieter.
+
+You'll sleep eventually. And tomorrow will come. And you'll handle it. But right now, just breathe. I'm thinking about you too.`
+            },
+            {
+                id: 6,
+                icon: '😰',
+                label: "Open When You're Stressed",
+                gifs: ['https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExY3d2eW55N2FldGJuaHg1bzNqNGJuNTE2OWdubTFkeHBsMXYzNnkzeCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/tYG0kOjcYi5SyN5rkj/giphy.gif'],
+                message: `There's too much. I get it. Everything feels urgent and heavy and like there's not enough time.
+
+But you don't have to do it all right now. You don't have to solve everything today. You just have to do the next thing. That's it. One thing at a time.
+
+And when this is over (because it will be over) you're going to look back and realize you handled it. Like you always do. Because you're capable of more than you give yourself credit for. Have the confidence in yourself that I have always had in you. 
+
+Take a breath. Drink some water, or a coffee maybe. Step outside for two minutes if you can. Then come back and do the next thing.
+
+I believe in you. Completely.`
+            },
+            {
+                id: 7,
+                icon: '🌃',
+                label: "Open When It's Late and You're Thinking",
+                gifs: [
+                    'https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExejlpc2ljbzYzajQxZm96NzU5c2xxcGh0MGR0cDJydDBsaGk1bGIwdSZlcD12MV9naWZzX3NlYXJjaCZjdD1n/F0XA5MfIpQP3ZmJH2D/giphy.gif',
+                    'https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExcHB5eXgwcXQxaWtybXJ1ajJwdXF0c2RkNnlubmZrbWE5cTBudmRqOCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/MZQkUm97KTI1gI8sUj/giphy.gif'
+                ],
+                message: `It's one of those nights. The kind where your mind wanders and you end up thinking about everything: the past, the future, who you are, who you're becoming, or something completely arbitrary.
+
+I think about those things too. Usually I think about you. About Boston at 11pm. About that shake shack burger and maneuvering the streets in bikes. Never would I have believed I could take you to the neighborhood I was raised in, I will always be grateful for that. 
+
+I don't know what you're thinking about right now. But whatever it is, I hope you know that you're on the right path. You're figuring it out. You're becoming someone incredible, well, you already are someone incredible.
+
+And somewhere out there, I'm probably awake too. Thinking about you. Thinking about us.`
+            }
+        ];
+
+        // ============================================
+        // SPLASH SCREEN
+        // ============================================
+        const splashScreen = document.getElementById('splashScreen');
+        const letterEnvelope = document.getElementById('letterEnvelope');
+
+        letterEnvelope.addEventListener('click', () => {
+            letterEnvelope.classList.add('open');
+            
+            setTimeout(() => {
+                splashScreen.classList.add('fade-out');
+                document.getElementById('mainContent').classList.add('visible');
+                document.getElementById('musicPlayer').classList.add('visible');
+                selectTrack(0);
+                initPetals();
+		initFloatingHearts();
+            }, 800);
+        });
+
+        // ============================================
+        // MUSIC PLAYER
+        // ============================================
+        const audio = document.getElementById('audioPlayer');
+        const playBtn = document.getElementById('playBtn');
+        const albumArt = document.getElementById('albumArt');
+        const songTitle = document.getElementById('songTitle');
+        const songArtist = document.getElementById('songArtist');
+        let currentTrack = -1;
+        let isPlaying = false;
+
+        function selectTrack(index) {
+            currentTrack = index;
+            const track = tracks[index];
+            
+            audio.src = track.audioUrl;
+            albumArt.src = track.coverUrl;
+            songTitle.textContent = track.title;
+            songArtist.textContent = track.artist;
+
+            document.querySelectorAll('.track-btn').forEach((btn, i) => {
+                btn.classList.toggle('active', i === index);
+            });
+
+            audio.play().then(() => {
+                isPlaying = true;
+                playBtn.textContent = '⏸';
+                albumArt.classList.add('playing');
+            }).catch(e => console.log('Autoplay prevented:', e));
+        }
+
+        function togglePlay() {
+            if (currentTrack === -1) {
+                selectTrack(0);
+                return;
+            }
+
+            if (isPlaying) {
+                audio.pause();
+                playBtn.textContent = '▶';
+                albumArt.classList.remove('playing');
+            } else {
+                audio.play();
+                playBtn.textContent = '⏸';
+                albumArt.classList.add('playing');
+            }
+            isPlaying = !isPlaying;
+        }
+
+        audio.addEventListener('ended', () => {
+            // Play next track
+            const nextTrack = (currentTrack + 1) % tracks.length;
+            selectTrack(nextTrack);
+        });
+
+        // ============================================
+        // PHYSICS-BASED INTERACTIVE ROSE PETALS
+        // ============================================
+        const canvas = document.getElementById('petalsCanvas');
+        const ctx = canvas.getContext('2d');
+        let petals = [];
+        let mouse = { x: 0, y: 0, isDown: false, vx: 0, vy: 0, lastX: 0, lastY: 0 };
+        let animationStarted = false;
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+
+        class Petal {
+            constructor(x, y) {
+                this.x = x || Math.random() * canvas.width;
+                this.y = y || -30;
+                this.size = 12 + Math.random() * 10;
+                this.vx = (Math.random() - 0.5) * 2;
+                this.vy = Math.random() * 2 + 1;
+                this.rotation = Math.random() * Math.PI * 2;
+                this.rotationSpeed = (Math.random() - 0.5) * 0.1;
+                this.gravity = 0.15;
+                this.friction = 0.99;
+                this.groundFriction = 0.8;
+                this.bounce = 0.5;
+                this.grounded = false;
+                this.hue = Math.random() * 20 - 10; // Slight color variation
+                this.messageShown = false;
+            }
+
+            update() {
+                // Apply gravity
+                if (!this.grounded) {
+                    this.vy += this.gravity;
+                }
+
+                // Apply velocity
+                this.x += this.vx;
+                this.y += this.vy;
+
+                // Apply friction
+                this.vx *= this.friction;
+                this.vy *= this.friction;
+
+                // Rotation
+                this.rotation += this.rotationSpeed;
+                this.rotationSpeed *= 0.99;
+
+                // Ground collision
+                if (this.y > canvas.height - this.size) {
+                    this.y = canvas.height - this.size;
+                    this.vy *= -this.bounce;
+                    this.vx *= this.groundFriction;
+                    this.grounded = Math.abs(this.vy) < 1;
+                    if (this.grounded) this.vy = 0;
+                }
+
+                // Wall collisions
+                if (this.x < 0) {
+                    this.x = 0;
+                    this.vx *= -this.bounce;
+                }
+                if (this.x > canvas.width - this.size) {
+                    this.x = canvas.width - this.size;
+                    this.vx *= -this.bounce;
+                }
+
+                // Mouse interaction
+                if (mouse.isDown) {
+                    const dx = this.x - mouse.x;
+                    const dy = this.y - mouse.y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    
+                    if (dist < 100) {
+                        const force = (100 - dist) / 100;
+                        this.vx += mouse.vx * force * 0.3;
+                        this.vy += mouse.vy * force * 0.3;
+                        this.grounded = false;
+                        this.rotationSpeed += (Math.random() - 0.5) * 0.2;
+                    }
+                }
+            }
+
+            draw() {
+                ctx.save();
+                ctx.translate(this.x + this.size / 2, this.y + this.size / 2);
+                ctx.rotate(this.rotation);
+
+                // Petal shape
+                ctx.beginPath();
+                ctx.moveTo(0, -this.size / 2);
+                ctx.bezierCurveTo(
+                    this.size / 2, -this.size / 3,
+                    this.size / 2, this.size / 3,
+                    0, this.size / 2
+                );
+                ctx.bezierCurveTo(
+                    -this.size / 2, this.size / 3,
+                    -this.size / 2, -this.size / 3,
+                    0, -this.size / 2
+                );
+
+                // Gradient fill
+                const gradient = ctx.createRadialGradient(0, 0, 0, 0, 0, this.size);
+                gradient.addColorStop(0, `hsl(${350 + this.hue}, 70%, 80%)`);
+                gradient.addColorStop(1, `hsl(${350 + this.hue}, 60%, 60%)`);
+                ctx.fillStyle = gradient;
+                ctx.fill();
+
+                // Highlight
+                ctx.beginPath();
+                ctx.ellipse(-this.size / 6, -this.size / 6, this.size / 4, this.size / 6, Math.PI / 4, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+                ctx.fill();
+
+                ctx.restore();
+            }
+
+            isClicked(x, y) {
+                const dx = this.x + this.size / 2 - x;
+                const dy = this.y + this.size / 2 - y;
+                return Math.sqrt(dx * dx + dy * dy) < this.size;
+            }
+        }
+
+        function initPetals() {
+            if (animationStarted) return;
+            animationStarted = true;
+            
+            resizeCanvas();
+            window.addEventListener('resize', resizeCanvas);
+
+            // Create initial petals
+            for (let i = 0; i < 30; i++) {
+                petals.push(new Petal(
+                    Math.random() * canvas.width,
+                    Math.random() * canvas.height * 0.7
+                ));
+            }
+
+            // Mouse/touch events
+            document.addEventListener('mousedown', (e) => {
+                mouse.isDown = true;
+                mouse.x = e.clientX;
+                mouse.y = e.clientY;
+                mouse.lastX = e.clientX;
+                mouse.lastY = e.clientY;
+            });
+
+            document.addEventListener('mousemove', (e) => {
+                mouse.vx = e.clientX - mouse.lastX;
+                mouse.vy = e.clientY - mouse.lastY;
+                mouse.lastX = mouse.x;
+                mouse.lastY = mouse.y;
+                mouse.x = e.clientX;
+                mouse.y = e.clientY;
+            });
+
+            document.addEventListener('mouseup', () => {
+                mouse.isDown = false;
+            });
+
+            document.addEventListener('touchstart', (e) => {
+                const touch = e.touches[0];
+                mouse.isDown = true;
+                mouse.x = touch.clientX;
+                mouse.y = touch.clientY;
+                mouse.lastX = touch.clientX;
+                mouse.lastY = touch.clientY;
+            });
+
+            document.addEventListener('touchmove', (e) => {
+                const touch = e.touches[0];
+                mouse.vx = touch.clientX - mouse.lastX;
+                mouse.vy = touch.clientY - mouse.lastY;
+                mouse.lastX = mouse.x;
+                mouse.lastY = mouse.y;
+                mouse.x = touch.clientX;
+                mouse.y = touch.clientY;
+            });
+
+            document.addEventListener('touchend', () => {
+                mouse.isDown = false;
+            });
+
+            // Add new petals periodically
+            setInterval(() => {
+                if (petals.length < 50) {
+                    petals.push(new Petal());
+                }
+            }, 2000);
+
+            animate();
+        }
+
+        
+
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            for (const petal of petals) {
+                petal.update();
+                petal.draw();
+            }
+
+            requestAnimationFrame(animate);
+        }
+
+        // ============================================
+        // ENVELOPE GRID
+        // ============================================
+        function createEnvelopes() {
+            const grid = document.getElementById('envelopeGrid');
+            
+            letters.forEach(letter => {
+                const envelope = document.createElement('div');
+                envelope.className = 'envelope-card';
+                envelope.onclick = () => openEnvelope(envelope, letter);
+                
+                envelope.innerHTML = `
+                    <div class="envelope-card-inner">
+                        <div class="envelope-card-body">
+                            <div class="envelope-card-flap"></div>
+                            <div class="envelope-card-content">
+                                <span class="envelope-card-icon">${letter.icon}</span>
+                                <h3 class="envelope-card-label">${letter.label}</h3>
+                                <p class="envelope-card-hint">Click to open</p>
+                            </div>
+                            <div class="wax-seal"></div>
+                        </div>
+                    </div>
+                `;
+                
+                grid.appendChild(envelope);
+            });
+
+            // Add invisible placeholders to center the last row
+            for (let i = 0; i < 2; i++) {
+                const placeholder = document.createElement('div');
+                placeholder.className = 'envelope-card placeholder';
+                grid.appendChild(placeholder);
+            }
+        }
+
+        function openEnvelope(envelopeEl, letter) {
+            envelopeEl.classList.add('opening');
+            
+            setTimeout(() => {
+                openModal(letter);
+                setTimeout(() => {
+                    envelopeEl.classList.remove('opening');
+                }, 500);
+            }, 600);
+        }
+
+        // ============================================
+        // MODAL
+        // ============================================
+        function openModal(letter) {
+            const modal = document.getElementById('modal');
+            document.getElementById('modalIcon').textContent = letter.icon;
+            document.getElementById('modalTitle').textContent = letter.label;
+            
+            const gifsContainer = document.getElementById('modalGifs');
+            gifsContainer.innerHTML = '';
+            letter.gifs.forEach(gifUrl => {
+                const img = document.createElement('img');
+                img.className = 'modal-gif';
+                img.src = gifUrl;
+                img.alt = '';
+                gifsContainer.appendChild(img);
+            });
+            
+            document.getElementById('modalMessage').textContent = letter.message;
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeModal() {
+            document.getElementById('modal').classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        document.getElementById('modal').addEventListener('click', (e) => {
+            if (e.target.id === 'modal') closeModal();
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeModal();
+        });
+
+// ============================================
+        // FLOATING HEARTS BACKGROUND
+        // ============================================
+        function initFloatingHearts() {
+            const container = document.getElementById('floatingHearts');
+            const hearts = ['♥', '♡', '❤', '🌹', '✿', '❀'];
+            
+            function createHeart() {
+                const heart = document.createElement('span');
+                heart.className = 'floating-heart';
+                heart.textContent = hearts[Math.floor(Math.random() * hearts.length)];
+                heart.style.left = Math.random() * 100 + '%';
+                heart.style.fontSize = (0.8 + Math.random() * 1.2) + 'rem';
+                heart.style.animationDuration = (15 + Math.random() * 20) + 's';
+                heart.style.animationDelay = Math.random() * 5 + 's';
+                container.appendChild(heart);
+
+                // Remove after animation completes
+                setTimeout(() => heart.remove(), 40000);
+            }
+
+            // Create initial hearts
+            for (let i = 0; i < 15; i++) {
+                setTimeout(() => createHeart(), i * 300);
+            }
+
+            // Keep creating hearts
+            setInterval(createHeart, 2000);
+        }
+
+        // ============================================
+        // INITIALIZE
+        // ============================================
+        createEnvelopes();
+    </script>
+</body>
+</html>
